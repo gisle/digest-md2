@@ -3,7 +3,7 @@ package Digest::MD2;
 use strict;
 use vars qw($VERSION @ISA @EXPORT_OK);
 
-$VERSION = '2.01';  # $Date$
+$VERSION = '2.02';  # $Date$
 
 require Exporter;
 *import = \&Exporter::import;
@@ -62,7 +62,7 @@ L<Digest::MD5>
 This library is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
- Copyright 1998-2001 Gisle Aas.
+ Copyright 1998-2003 Gisle Aas.
  Copyright 1990-1992 RSA Data Security, Inc.
 
 =head1 AUTHOR

@@ -1,3 +1,16 @@
+2003-07-22   Gisle Aas <gisle@ActiveState.com>
+
+   Release 2.02
+
+   Sync up with Digest-MD5-2.26
+
+      - added clone method
+      - $md2->addfile croak on read errors
+      - safer patchlevel include
+      - warn if functional interface used as methods
+
+
+
 2002-12-27   Gisle Aas <gisle@ActiveState.com>
 
    Release 2.01

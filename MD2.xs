@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the same terms as Perl itself.
  * 
- *  Copyright 1998-2000 Gisle Aas.
+ *  Copyright 1998-2003 Gisle Aas.
  *  Copyright 1990-1992 RSA Data Security, Inc.
  *
  * This code is derived from the reference implementation in RFC 1231
@@ -38,6 +38,27 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#ifndef PERL_VERSION
+#    include <patchlevel.h>
+#    if !(defined(PERL_VERSION) || (SUBVERSION > 0 && defined(PATCHLEVEL)))
+#        include <could_not_find_Perl_patchlevel.h>
+#    endif
+#    define PERL_REVISION       5
+#    define PERL_VERSION        PATCHLEVEL
+#    define PERL_SUBVERSION     SUBVERSION
+#endif
+
+#if PERL_VERSION <= 4 && !defined(PL_dowarn)
+   #define PL_dowarn dowarn
+#endif
+
+#ifdef G_WARN_ON
+   #define DOWARN (PL_dowarn & G_WARN_ON)
+#else
+   #define DOWARN PL_dowarn
+#endif
+
 
 #ifdef SvPVbyte
    #if PERL_REVISION == 5 && PERL_VERSION < 7
@@ -316,6 +337,22 @@ new(xclass)
 	XSRETURN(1);
 
 void
+clone(self)
+	SV* self
+    PREINIT:
+	MD2_CTX* cont = get_md2_ctx(self);
+	char *myname = sv_reftype(SvRV(self),TRUE);
+	MD2_CTX* context;
+    PPCODE:
+	STRLEN my_na;
+	New(55, context, 1, MD2_CTX);
+	ST(0) = sv_newmortal();
+	sv_setref_pv(ST(0), myname , (void*)context);
+	SvREADONLY_on(SvRV(ST(0)));
+	memcpy(context,cont,sizeof(MD2_CTX));
+	XSRETURN(1);
+
+void
 DESTROY(context)
 	MD2_CTX* context
     CODE:
@@ -347,10 +384,16 @@ addfile(self, fh)
     CODE:
         if (fh) {
 	    /* Process blocks until EOF */
-            while ( (n = PerlIO_read(fh, buffer, sizeof(buffer)))) {
+            while ( (n = PerlIO_read(fh, buffer, sizeof(buffer))) > 0) {
 	        MD2Update(context, buffer, n);
 	    }
-        }
+	    if (PerlIO_error(fh)) {
+		croak("Reading from filehandle failed");
+	    }
+	}
+	else {
+	    croak("No filehandle passed");
+	}
 	XSRETURN(1);  /* self */
 
 void
@@ -382,6 +425,31 @@ md2(...)
 	unsigned char digeststr[16];
     PPCODE:
 	MD2Init(&ctx);
+
+	if (DOWARN) {
+            char *msg = 0;
+	    if (items == 1) {
+		if (SvROK(ST(0))) {
+                    SV* sv = SvRV(ST(0));
+		    if (SvOBJECT(sv) && strEQ(HvNAME(SvSTASH(sv)), "Digest::MD2"))
+		        msg = "probably called as method";
+		    else
+			msg = "called with reference argument";
+		}
+	    }
+	    else if (items > 1) {
+		data = (unsigned char *)SvPVbyte(ST(0), len);
+		if (len == 11 && memEQ("Digest::MD2", data, 11)) {
+		    msg = "probably called as class method";
+		}
+	    }
+	    if (msg) {
+		char *f = (ix == F_BIN) ? "md2" :
+                          (ix == F_HEX) ? "md2_hex" : "md2_base64";
+	        warn("&Digest::MD2::%s function %s", f, msg);
+	    }
+	}
+
 	for (i = 0; i < items; i++) {
 	    data = (unsigned char *)(SvPVbyte(ST(i), len));
 	    MD2Update(&ctx, data, len);
