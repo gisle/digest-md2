@@ -3,6 +3,7 @@ MANIFEST
 MD2.pm
 MD2.xs
 Makefile.PL
+README
 rfc1319.txt
 t/badfile.t
 t/md2.t
