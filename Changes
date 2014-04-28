@@ -1,3 +1,12 @@
+2014-04-28   Gisle Aas <gisle@ActiveState.com>
+
+   Release 2.04
+
+   No change.  I accidentally deleted the 2.03 dist from CPAN when trying
+   to clean up old Digest-MD5 dists.
+
+
+
 2003-10-06   Gisle Aas <gisle@ActiveState.com>
 
    Release 2.03
